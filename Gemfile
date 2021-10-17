@@ -27,6 +27,12 @@ gem 'jsonapi-serializer'
 
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.4.4', require: false
+# RestClient
+gem 'rest-client'
+# Square api
+gem 'square.rb'
+# load env
+gem 'figaro'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
