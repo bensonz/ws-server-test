@@ -20,4 +20,10 @@ elsif result.error?
 end
 puts "request finished"
 
-puts result.data.company_name
+puts result.data.customers[0][:company_name]
+
+body = {}
+body[:query] = {}
+body[:query][:filter] = {}
+body[:query][:filter][:country] = "CN"
+result2 = client.customers.search_customers(body:body)

@@ -1,17 +1,12 @@
 require 'square'
 require 'securerandom'
-
 module Api
   include Square
-  class CustomersController < ApplicationController
-    protect_from_forgery with: :null_session
-
+  class CustomersController < SecuredController
     #GET 
     def index
       param_filter
-      puts params
-      puts ENV['SQUARE_APPLICATION_SECRET']
-      if (ENV['SQUARE_APPLICATION_SECRET'] == "")
+      if (ENV['SQUARE_APPLICATION_SECRET'] != "")
         return render json: {}
       end
       client = Square::Client.new(
