@@ -1,7 +1,6 @@
 class AuthorizationService
 
     def initialize(headers = {})
-      puts 'intialized'
       @headers = headers
     end
   
