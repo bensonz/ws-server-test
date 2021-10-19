@@ -41,8 +41,13 @@ class SquareService
     end
 
     # https://github.com/square/square-ruby-sdk/blob/master/doc/models/create-customer-request.md
-    def self.create_cusotmer(params)
+    def self.create_cusotmer(ide_key, params)
+        params.permit!
         initialize
-        puts params
+        body = {
+            :idempotency_key => ide_key
+        }
+        request_body = body.merge(params)
+        @square_client.customers.create_customer(body: request_body)
     end
 end

@@ -58,9 +58,19 @@ module Api
       # I am not sure why the body would be in params[:customer]
       # but it is.
       result = SquareService::create_cusotmer(idempotency_key, params[:customer])
-      render json: { 
-        :success => false
-      }, status: 200
+
+      if (result.success?)
+        return render json: {
+          :success => true,
+          :customers => result.data.curstomer
+        }
+      else
+        return render json: {
+          :success => false,
+          :errors => result.errors,
+          :customers => []
+        }
+      end
     end
 
     def create_param_check
