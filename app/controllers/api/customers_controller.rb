@@ -1,26 +1,30 @@
-require 'square'
-require 'securerandom'
 module Api
-  include Square
   class CustomersController < SecuredController
-    #GET 
+    ##
+    # TODO: Make controller persisent?
+    ##
+    # TODO: Fix this? if not set, get InvalidAuthenticityToken on PATCH & POST requests
+    protect_from_forgery with: false
+    
+    # GET 
     def index
       param_filter
-      if (ENV['SQUARE_APPLICATION_SECRET'] != "")
-        return render json: {}
-      end
-      client = Square::Client.new(
-        access_token:ENV['SQUARE_APPLICATION_SECRET'],
-        environment: 'sandbox',
-        custom_url: 'https://connect.squareupsandbox.com',
-      )
-      result = client.customers.list_customers
-      puts result.errors
+      # TODO: Add pagination handle?
+      result = SquareService::list_customers
       if (result.success?)
-        return render json: {
-          success: true,
-          customers: result.data.customers
-        }
+        if (params[:$filter] == nil)
+          return render json: {
+            success: true,
+            customers: result.data.customers
+          }
+        else
+          return render json: {
+            success: true,
+            customers: result.data.customers.select {|person|
+              person[:address][:country] == params[:$filter]
+            }
+          }
+        end
       else
         return render json: {
           success: false,
@@ -48,6 +52,7 @@ module Api
       else
         puts "no"
       end
+      SquareService::create_cusotmer params[:customer]
       render json: { "error": false }, status: 200
     end
   end
