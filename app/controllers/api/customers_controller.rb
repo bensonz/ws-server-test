@@ -14,21 +14,22 @@ module Api
       if (result.success?)
         if (params[:$filter] == nil)
           return render json: {
-            success: true,
-            customers: result.data.customers
+            :success => true,
+            :customers => result.data.customers
           }
         else
           return render json: {
-            success: true,
-            customers: result.data.customers.select {|person|
-              person[:address][:country] == params[:$filter]
+            :success => true,
+            :customers => result.data.customers.select {|person|
+              # do a ignore-case compare.
+              person[:address][:country].upcase == params[:$filter].upcase
             }
           }
         end
       else
         return render json: {
-          success: false,
-          customers: []
+          :success => false,
+          :customers => []
         }
       end
     end
@@ -44,16 +45,35 @@ module Api
 
     # POST
     def create
-      puts params
-      if (params[:$filter])
-        puts params[:$filter]
-        puts params[:$filter].upcase
-        puts params[:$filter].upcase == '"CN"'
-      else
-        puts "no"
-      end
-      SquareService::create_cusotmer params[:customer]
-      render json: { "error": false }, status: 200
+      ##
+      # Creates a customer in square
+      ##
+      if !create_param_check
+        return render json: { 
+          :success => false, 
+          :error_message => "One or more required param is missing."
+          }, status: 400
+      end 
+      idempotency_key = SecureRandom.uuid
+      # I am not sure why the body would be in params[:customer]
+      # but it is.
+      result = SquareService::create_cusotmer(idempotency_key, params[:customer])
+      render json: { 
+        :success => false
+      }, status: 200
     end
+
+    def create_param_check
+      if (params.has_key?(:given_name) || 
+        params.has_key?(:family_name) ||
+        params.has_key?(:company_name) ||
+        params.has_key?(:email_address) ||
+        params.has_key?(:phone_number)
+      )
+        return true
+      else
+        return false
+      end
+    end 
   end
 end
