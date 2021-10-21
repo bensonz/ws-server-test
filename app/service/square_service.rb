@@ -44,7 +44,6 @@ class SquareService
 
     # https://github.com/square/square-ruby-sdk/blob/master/doc/models/create-customer-request.md
     def self.create_cusotmer(ide_key, params)
-        params.permit!
         initialize
         body = {
             :idempotency_key => ide_key
