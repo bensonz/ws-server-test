@@ -5,7 +5,8 @@ module Api
     ##
     # TODO: Fix this? if not set, get InvalidAuthenticityToken on PATCH & POST requests
     protect_from_forgery with: false
-    
+    # TODO: Add middleware for caching?
+
     # GET 
     def index
       param_filter
@@ -62,7 +63,7 @@ module Api
       if (result.success?)
         return render json: {
           :success => true,
-          :customers => result.data.curstomer
+          :customers => result.data.customer
         }
       else
         return render json: {
@@ -84,6 +85,10 @@ module Api
       else
         return false
       end
-    end 
+    end
+
+    def destroy
+      render json: "NotImplemented" 
+    end
   end
 end
