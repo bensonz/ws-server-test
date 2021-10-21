@@ -4,10 +4,17 @@ A test server written in ruby
 ## init
 this repor is initialized with
 `rail new ws-server-test`
-environment variables are stored at .env, 2 credentials are required for SquareSDK
+~~environment variables are stored at .env, 2 credentials are required for SquareSDK~~
 ```
 SQUARE_APPLICATION_ID=xxx
 SQUARE_APPLICATION_SECRET=xxx
+```
+
+**UPDATE**
+Credentials are now stored at config/application.yml
+```
+SQUARE_APPLICATION_ID: (This is not actaully required/used)
+SQUARE_APPLICATION_SECRET:
 ```
 
 Requirements
@@ -29,12 +36,15 @@ Get (for fetch) filter by location
     reads Square credentials from env, and provide it to other modules
 
 
-#### HttpRequester
-    as the name
+#### SquareService
+    as the name, serves as a singleton to make contact to the square's API.
 
- #### Users/Customers
-    The user modules, stores and reterives users data
-    handles the actual request as well
+ #### CusotmersController
+    The customers module, stores and reterives users data
+    handles the actual request as well.
+    This is the main handler for our main endpoing of test:
+    
+    /api/customers
 
 
 ### DataStructure
