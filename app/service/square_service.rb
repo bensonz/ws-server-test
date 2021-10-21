@@ -34,12 +34,15 @@ class SquareService
     end
 
     # https://github.com/square/square-ruby-sdk/blob/master/doc/api/customers.md#list-customers
-    def self.list_customers
+    def self.list_customers(cursor=nil)
         # This function returns only 100 customers per request
         # You can use 'cursor' in param to indicate offset.
         # The 'cursor' is the value returned from your previous list_customers call.
         initialize
-        @square_client.customers.list_customers
+        @square_client.customers.list_customers(
+            cursor: cursor,
+            limit: 5
+        )
     end
 
     # https://github.com/square/square-ruby-sdk/blob/master/doc/models/create-customer-request.md

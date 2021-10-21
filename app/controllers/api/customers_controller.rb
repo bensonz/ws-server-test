@@ -10,23 +10,33 @@ module Api
     # GET
     def index
       param_filter
-      # TODO: Add pagination handle?
-      result = SquareService::list_customers
-      if (result.success?)
-        print "Customer length: #{result.data.customers.length()} \n"
-        if (params[:$filter] == nil)
-          return unify_return_render(true, result.data.customers)
+      full_result = []
+      cursor = nil
+      loop do
+        result = SquareService::list_customers(cursor)
+        if (result.success?)
+          full_result.concat(result.data.customers)
         else
-          # do ignorecase compare.
-          filter_upcase = params[:$filter].upcase
-          filtered = result.data.customers.select {|person|
-            (person[:address][:country].upcase == filter_upcase || 
-              person[:address][:locality].upcase.include?(filter_upcase))
-          }
-          return unify_return_render(true, filtered)
+          # failed. just return.
+          return unify_return_render(false, [])
         end
+        if (result.cursor)
+          cursor = result.cursor
+        else
+          break
+        end
+      end  
+      print "Customer length: #{full_result.length()} \n"
+      if (params[:$filter] == nil)
+        return unify_return_render(true, full_result)
       else
-        return unify_return_render(false, [])
+        # do ignorecase compare.
+        filter_upcase = params[:$filter].upcase
+        filtered = full_result.select {|person|
+          (person[:address][:country].upcase == filter_upcase || 
+            person[:address][:locality].upcase.include?(filter_upcase))
+        }
+        return unify_return_render(true, filtered)
       end
     end
 
