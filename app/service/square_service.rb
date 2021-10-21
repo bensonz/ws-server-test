@@ -26,6 +26,8 @@ class SquareService
             square_version: '2021-09-15',
             access_token: ENV['SQUARE_APPLICATION_SECRET'],
             environment: 'sandbox',
+            timeout: 120,
+            max_retries: 3,
             custom_url: 'https://connect.squareupsandbox.com',
         )
         puts 'square client connected.'
