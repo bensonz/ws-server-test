@@ -7,45 +7,31 @@ module Api
     protect_from_forgery with: false
     # TODO: Add middleware for caching?
 
-    # GET 
+    # GET
     def index
       param_filter
       # TODO: Add pagination handle?
       result = SquareService::list_customers
       if (result.success?)
-        print "Customer length: "
-        puts result.data.customers.length()
+        print "Customer length: #{result.data.customers.length()} \n"
         if (params[:$filter] == nil)
-          return render json: {
-            :success => true,
-            :customers => result.data.customers
-          }
+          return unify_return_render(true, result.data.customers)
         else
-          # do a ignorecase compare.
+          # do ignorecase compare.
           filter_upcase = params[:$filter].upcase
-          return render json: {
-            :success => true,
-            :customers => result.data.customers.select {|person|
-              (person[:address][:country].upcase == filter_upcase || 
-                person[:address][:locality].upcase.include?(filter_upcase))
-            }
+          filtered = result.data.customers.select {|person|
+            (person[:address][:country].upcase == filter_upcase || 
+              person[:address][:locality].upcase.include?(filter_upcase))
           }
+          return unify_return_render(true, filtered)
         end
       else
-        return render json: {
-          :success => false,
-          :customers => []
-        }
+        return unify_return_render(false, [])
       end
     end
 
     def param_filter
       params.permit(:$filter)
-    end 
-
-     # PATCH 
-    def update
-      render json: "NotImplemented"
     end 
 
     # POST
@@ -56,52 +42,45 @@ module Api
       begin
         create_param_check
       rescue
-        return render json: { 
-          :success => false, 
-          :error_message => "One or more required param is missing."
-          }, status: 400
+        return unify_return_render(false, nil, ["PARAM_MISSING"], "One or more required param is missing.", 400)
       end
       result = Customer.find_by(email: params[:email])
       if (result == nil)
-        return render json: {
-          :success => false,
-          :error_message => "This customer is not within our database"
-        }
+        return unify_return_render(false,nil, ["INVALID_DATA"], "This customer is not within our database")
       else
         new_customer = parse_customer_into_square_obj(result)
         puts new_customer
         idempotency_key = SecureRandom.uuid
-        counter = 0;
-        while counter <= 5 do
+        # start the square request
+        sq_result = nil
+        5.times do |t|
           begin
-            result = SquareService::create_cusotmer(idempotency_key, new_customer)
+            sq_result = SquareService::create_cusotmer(idempotency_key, new_customer)
           rescue 
             # ignore errors
           end
-          if (result != nil) 
+          if (sq_result != nil) 
             break
           end
-          counter +=1
         end
       end
-      if (result == nil)
-        return render json: {
-          :success => false,
-          :error_message => "Cannot create customer."
-        }
+      if (sq_result == nil)
+        return unify_return_render(false, nil, ["REQUEST_FAILURE"], "Create customer failed")
       end
-      if (result.success?)
-        return render json: {
-          :success => true,
-          :customers => [result.data.customer]
-        }
+      if (sq_result.success?)
+        return unify_return_render(true, [sq_result.data.customer])
       else
-        return render json: {
-          :success => false,
-          :errors => result.errors,
-          :customers => []
-        }
+        return unify_return_render(false, nil, sq_result.errors, "Square returned failure")
       end
+    end
+
+    def unify_return_render(success, customers, errors=nil, error_message=nil, status_code=200)
+      return render json: {
+        :success => success,
+        :customers => customers,
+        :errors => errors,
+        :error_message => error_message
+      }, status: status_code
     end
 
     def parse_customer_into_square_obj(customer_in_db)
@@ -126,6 +105,12 @@ module Api
       params.require(:email)
     end
 
+     # PATCH 
+     def update
+      render json: "NotImplemented"
+    end 
+
+    # DELETE
     def destroy
       render json: "NotImplemented" 
     end
